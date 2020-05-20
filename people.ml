@@ -102,22 +102,93 @@ class susceptible (initx : int) (inity : int) =
   end
 
 and (* class *) infected (initx : int) (inity : int) =
-  object
+  object 
     inherit person initx inity
                    cSTEP_SIZE_INFECTED
                    cINFECTIOUSNESS_INFECTED
+            as super
+
+    val mutable infected_counter = Counter.counter
 
     initializer
       Stat.infected#bump
 
+    method! update =
+      super#update;
+      let posx, posy = self#pos in
+      let infectiousness_total =
+
+      (* use flip coin to check if they are dead. CMortality is the 
+      probability someone dies*)
+
+      if Utilites.flip_coin (cMortality) then 
+        begin
+          Stat.infected#debump;
+          Registry.deregister (self :> thing_type);
+          Registry.register ((new deceased posx posy) :> thing_type)
+        end
+      else if float_of_int(infected_counter#count) >= Utilities.gaussian(fst cRECOVERY_PERIOD snd cRECOVERY_PERIOD) then
+         begin 
+          Stat.infected#debump
+          Registry.deregister (self :> thing_type);
+          Registry.register ((new recovered posx posy) :> thing_type)
+        end
+
+    method! draw =
+      let x, y = self#pos in
+      Viz.draw_circle x y cCOLOR_INFECTED
+    end
+
+
+and deceased (initx : int) (inity : int) =
+  object
+    inherit person initx inity
+                   cSTEP_SIZE_DECEASED
+                   cINFECTIOUSNESS_DECEASED
+
+    initializer
+      Stat.deceased#bump
+
+    method! draw =
+      let x, y = self#pos in
+      Viz.draw_circle x y cCOLOR_DECEASED  
+  
+  end
+
+and recovered (initx : int) (inity : int) =
+  object
+    inherit person initx inity
+                   cSTEP_SIZE_RECOVERED
+                   cINFECTIOUSNESS_RECOVERED
+            as super
+
+    val mutable recovered_counter = Counter.counter
+
+    initializer
+      Stat.recovered#bump
+
+    method! update = 
+      super#update ;
+      recovered_counter#bump;
+      if float_of_int(recoverd_counter#count) >= Utilities.gaussian (fst cImmunity_Period snd cImmunity_Period) then
+          begin
+            Stat.recoverede#debump;
+            Registry.deregister (self :> thing_type);
+            Registry.register ((new susceptible posx posy) :> thing_type)
+          end      
+
+      method! draw =
+        let x, y = self#pos in
+        Viz.draw_circle x y cCOLOR_RECOVERED
+  end ;;
+
+
     (*.................................................................
       Place any augmentations to `infected` here.
     ................................................................ *)
-  end
 
 (*....................................................................
 Place definitions for any other classes here. In particular, you'll
 want to at least implement a `recovered` class for `infected` people
 who have recovered from the infection.
 ....................................................................*)
-;;

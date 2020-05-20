@@ -23,7 +23,28 @@ class type counter_type =
 Place your implementation of the `counter` class of class type
 `counter_type` here.
 ....................................................................*)
+  
+class counter =
+  object
 
+    val mutable c = 0
+
+    method set n = c <- n  
+
+    method reset = c <- 0  
+
+    method bump = c <- c + 1 
+
+    method debump = c <- c - 1 
+
+    method count = c 
+  end ;;
+
+(* use mutable value *)
+
+
+  (* object oriented counter that can keep track of a running total
+  than can me incremented or decremented *)
    
 (*======================================================================
 Reflection on the problem set
